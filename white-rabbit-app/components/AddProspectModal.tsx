@@ -34,7 +34,6 @@ export default function AddProspectModal({ onClose, onAdded }: { onClose: () => 
         hiring_signals: form.hiring_signals || undefined,
         tech_stack: form.tech_stack ? form.tech_stack.split(',').map(s => s.trim()).filter(Boolean) : [],
         profitability: 'unknown',
-        geographic_region: 'Stockholm',
       })
       onAdded()
       onClose()
