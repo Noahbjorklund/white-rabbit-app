@@ -93,22 +93,6 @@ export interface AnalyzeResponse {
   tokens_used?: number
 }
 
-export interface SummarizeRequest {
-  transcript: string
-  company_id?: number
-  contact_id?: number
-}
-
-export interface SummarizeResponse {
-  pain_points: string[]
-  systems: string[]
-  buying_signals: string[]
-  objections: string[]
-  urgency: string
-  next_step: string
-  tokens_used?: number
-}
-
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     headers: { 'Content-Type': 'application/json' },
@@ -136,8 +120,6 @@ export const api = {
       request<AnalyzeResponse>('/ai/analyze', { method: 'POST', body: JSON.stringify(body) }),
     pushCRM: (company_id: number, crm: string) =>
       request('/ai/crm/push', { method: 'POST', body: JSON.stringify({ company_id, crm }) }),
-    summarize: (body: SummarizeRequest) =>
-      request<SummarizeResponse>('/ai/summarize', { method: 'POST', body: JSON.stringify(body) }),
   },
   activities: {
     list: (company_id: number) =>

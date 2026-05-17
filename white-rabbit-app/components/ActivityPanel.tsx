@@ -25,10 +25,6 @@ export default function ActivityPanel({ companyId }: { companyId: number }) {
   const [type, setType] = useState<ActivityType>('note')
   const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
-  const [showSummarize, setShowSummarize] = useState(false)
-  const [transcript, setTranscript] = useState('')
-  const [summarizing, setSummarizing] = useState(false)
-  const [summarizeMsg, setSummarizeMsg] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -44,12 +40,6 @@ export default function ActivityPanel({ companyId }: { companyId: number }) {
 
   useEffect(() => { load() }, [load])
 
-  useEffect(() => {
-    setShowSummarize(false)
-    setTranscript('')
-    setSummarizeMsg('')
-  }, [companyId])
-
   async function logActivity() {
     if (!notes.trim()) return
     setSaving(true)
@@ -62,23 +52,6 @@ export default function ActivityPanel({ companyId }: { companyId: number }) {
       setError('Kunde inte spara aktivitet.')
     }
     setSaving(false)
-  }
-
-  async function runSummarize() {
-    if (!transcript.trim()) return
-    setSummarizing(true)
-    setSummarizeMsg('')
-    setError('')
-    try {
-      await api.ai.summarize({ transcript: transcript.trim(), company_id: companyId })
-      setTranscript('')
-      setShowSummarize(false)
-      setSummarizeMsg('Summering klar — sparad som mötesaktivitet.')
-      await load()
-    } catch {
-      setSummarizeMsg('Fel vid summering — kontrollera att API:et körs.')
-    }
-    setSummarizing(false)
   }
 
   function formatDate(iso: string) {
@@ -107,62 +80,9 @@ export default function ActivityPanel({ companyId }: { companyId: number }) {
           rows={3}
           style={{ ...input, marginTop: 8, resize: 'vertical', minHeight: 64 }}
         />
-        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-          <button
-            onClick={logActivity}
-            disabled={saving || !notes.trim()}
-            style={{ ...primaryBtn, flex: 1 }}
-          >
-            {saving ? 'Sparar...' : '+ Logga'}
-          </button>
-          <button
-            onClick={() => {
-              setShowSummarize(s => !s)
-              setSummarizeMsg('')
-            }}
-            style={{
-              ...secondaryBtn,
-              flex: 1,
-              background: showSummarize ? 'var(--bg)' : 'var(--surface)',
-              fontWeight: showSummarize ? 500 : 400,
-            }}
-          >
-            ✦ AI-summering
-          </button>
-        </div>
-
-        {showSummarize && (
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-            <div style={{ ...sectionTitle, marginBottom: 6 }}>Mötestransskript</div>
-            <textarea
-              value={transcript}
-              onChange={e => setTranscript(e.target.value)}
-              placeholder="Klistra in mötesanteckningar eller transkript..."
-              rows={6}
-              style={{ ...input, resize: 'vertical', minHeight: 120 }}
-            />
-            <button
-              onClick={runSummarize}
-              disabled={summarizing || !transcript.trim()}
-              style={{ ...primaryBtn, marginTop: 8 }}
-            >
-              {summarizing ? 'Analyserar...' : 'Analysera med Claude'}
-            </button>
-          </div>
-        )}
-
-        {summarizeMsg && (
-          <div style={{
-            fontSize: 12,
-            color: summarizeMsg.startsWith('Fel') ? '#c00' : 'var(--score-hot)',
-            marginTop: 10,
-            padding: '8px 10px',
-            background: summarizeMsg.startsWith('Fel') ? '#fff0f0' : '#e1f5ee',
-            borderRadius: 6,
-          }}>
-            {summarizeMsg}
-          </div>
-        )}
+        <button onClick={logActivity} disabled={saving || !notes.trim()} style={{ ...primaryBtn, marginTop: 8 }}>
+          {saving ? 'Sparar...' : 'Spara aktivitet'}
+        </button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '14px 20px' }}>
@@ -198,19 +118,6 @@ export default function ActivityPanel({ companyId }: { companyId: number }) {
                 Nästa steg: {a.next_step}
               </div>
             )}
-            {(a.ai_pain_points?.length ?? 0) > 0 && (
-              <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                <span style={{ color: 'var(--text-tertiary)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  AI-insikter
-                </span>
-                {a.ai_pain_points!.map((p, i) => (
-                  <div key={i} style={{ marginTop: 3 }}>· {p}</div>
-                ))}
-                {a.ai_next_step && (
-                  <div style={{ marginTop: 4, color: 'var(--score-hot)' }}>→ {a.ai_next_step}</div>
-                )}
-              </div>
-            )}
           </div>
         ))}
       </div>
@@ -231,15 +138,8 @@ const input: React.CSSProperties = {
 }
 
 const primaryBtn: React.CSSProperties = {
-  padding: '8px', borderRadius: 7,
+  width: '100%', padding: '8px', borderRadius: 7,
   background: 'var(--text-primary)', color: 'white',
   border: 'none', fontSize: 12, fontWeight: 500,
-  cursor: 'pointer', fontFamily: 'var(--font-sans)',
-}
-
-const secondaryBtn: React.CSSProperties = {
-  padding: '8px', borderRadius: 7,
-  background: 'var(--surface)', color: 'var(--text-primary)',
-  border: '1px solid var(--border)', fontSize: 12,
   cursor: 'pointer', fontFamily: 'var(--font-sans)',
 }
